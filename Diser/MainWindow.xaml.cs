@@ -11,16 +11,17 @@ namespace Diser
     public partial class MainWindow : Window
     {
         private static ASTRALib.IRastr Rastr;
-        //private static Rastr.Load(ASTRALib.RG_KOD.RG_REPL, path, "");
         private static ASTRALib.ITable Node;
         private static ASTRALib.ITable Vetv;
-        private static ASTRALib.ICol numberBus; //Номер Узла
-        private static ASTRALib.ICol powerActiveLoad; //активная мощность нагрузки.
-        private static ASTRALib.ICol powerRectiveLoad; //реактивная мощность нагрузки.
-        private static ASTRALib.ICol powerActiveGeneration; //активная мощность генерации.
+        private static ASTRALib.ITable Islands;
+        private static ASTRALib.ICol numberBus;              //Номер Узла
+        private static ASTRALib.ICol powerActiveLoad;        //активная мощность нагрузки.
+        private static ASTRALib.ICol powerRectiveLoad;       //реактивная мощность нагрузки.
+        private static ASTRALib.ICol powerActiveGeneration;  //активная мощность генерации.
         private static ASTRALib.ICol powerRectiveGeneration; //реактивная мощность генерации.
-        private static ASTRALib.ICol voltageCalc; //Расчётное напряжение.
-        private static ASTRALib.ICol voltageAngle; //Расчётный угол.
+        private static ASTRALib.ICol voltageCalc;            //Расчётное напряжение.
+        private static ASTRALib.ICol voltageAngle;           //Расчётный угол.
+        private static ASTRALib.ICol freq;                   //Частота.
 
         private static string path;
         private static int trackBar1_delta = 50;
@@ -46,6 +47,8 @@ namespace Diser
                 Rastr.Load(ASTRALib.RG_KOD.RG_REPL, path, "");
                 Node = Rastr.Tables.Item("node");
                 Vetv = Rastr.Tables.Item("vetv");
+                Islands = Rastr.Tables.Item("islands");
+                freq = Islands.Cols.Item("f");
                 numberBus = Node.Cols.Item("ny"); //Номер Узла
                 powerActiveLoad = Node.Cols.Item("pn"); //активная мощность нагрузки.
                 powerRectiveLoad = Node.Cols.Item("qn"); //реактивная мощность нагрузки.
@@ -66,31 +69,17 @@ namespace Diser
 
             if (path != null)
             {
-
                 //Отправка исходных данных
-                powerActiveGeneration.set_ZN(1, slider1.Value);
+                powerActiveGeneration.set_ZN(5, slider1.Value);
 
                 //Расчет режима
                 calcRegim(Rastr);
 
-
-
-
-                //label10.Text = $"U = {Math.Round(voltageCalc.get_ZN(0), 3)}∠{Math.Round(voltageAngle.get_ZN(0), 3)}";
-                //label11.Text = $"U = {Math.Round(voltageCalc.get_ZN(1), 3)}∠{Math.Round(voltageAngle.get_ZN(1), 3)}";
-                //label12.Text = $"U = {Math.Round(voltageCalc.get_ZN(2), 3)}∠{Math.Round(voltageAngle.get_ZN(2), 3)}";
-
-                s1.Text = $"S = {Math.Round(powerActiveGeneration.get_ZN(0), 3)}+j·{Math.Round(powerRectiveGeneration.get_ZN(0), 3)}";
-                s2.Text = $"S = {Math.Round(powerActiveLoad.get_ZN(1), 3)}+j·{Math.Round(powerRectiveLoad.get_ZN(1), 3)}";
-                s3.Text = $"S = {Math.Round(powerActiveGeneration.get_ZN(2), 3)}+j·{Math.Round(powerRectiveGeneration.get_ZN(2), 3)}";
-
-
-                //Thread.Sleep(50);
-
-
+                freq1.Text = $"f = {Math.Round(freq.get_ZN(0), 3)}";
+                freq7.Text = $"f = {Math.Round(freq.get_ZN(1), 3)}";
+                sg6.Text = $"{Math.Round(powerActiveGeneration.get_ZN(5), 3)}+j·{Math.Round(powerRectiveGeneration.get_ZN(5), 3)}";
             }
-            //else
-                //MessageBox.Show("Загрузите файл модели!");
+
         }
         bool calcRegim(ASTRALib.IRastr inRastr)
         {
