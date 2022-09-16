@@ -10,6 +10,9 @@ namespace Diser
     /// </summary>
     public partial class MainWindow : Window
     {
+        private static string pathCenter = @"C:\Users\Агро\Desktop\С винды мака 30.08.22\Дисер\Делим\Center.rg2";
+        private static string pathRight = @"C:\Users\Агро\Desktop\С винды мака 30.08.22\Дисер\Делим\Right.rg2";
+        private static string pathLeft = @"C:\Users\Агро\Desktop\С винды мака 30.08.22\Дисер\Делим\Left.rg2";
         private static ASTRALib.IRastr Rastr;
         private static ASTRALib.ITable Node;
         private static ASTRALib.ITable Vetv;
@@ -23,7 +26,6 @@ namespace Diser
         private static ASTRALib.ICol voltageAngle;           //Расчётный угол.
         private static ASTRALib.ICol freq;                   //Частота.
 
-        private static string path;
         private static int trackBar1_delta = 50;
         public MainWindow()
         {
@@ -31,56 +33,79 @@ namespace Diser
             slider1.Minimum = 100;
             slider1.Maximum = 1000;
             slider1.TickFrequency = trackBar1_delta;
+            centerF.Text = $"";
+            sg6.Text = $"";
+            rightF.Text = $"";
         }
 
         private void Button_Click(object sender, RoutedEventArgs e)
         {
-            OpenFileDialog openDialog = new OpenFileDialog();
-            openDialog.Filter = "Файл режима rg2 (.rg2) | *.rg2|All files| *.*";
-            if (openDialog.ShowDialog() == true)
-            {
-                path = openDialog.FileName;
-            }
-            if (path != null)
-            {
-                Rastr = new ASTRALib.Rastr();
-                Rastr.Load(ASTRALib.RG_KOD.RG_REPL, path, "");
-                Node = Rastr.Tables.Item("node");
-                Vetv = Rastr.Tables.Item("vetv");
-                Islands = Rastr.Tables.Item("islands");
-                freq = Islands.Cols.Item("f");
-                numberBus = Node.Cols.Item("ny"); //Номер Узла
-                powerActiveLoad = Node.Cols.Item("pn"); //активная мощность нагрузки.
-                powerRectiveLoad = Node.Cols.Item("qn"); //реактивная мощность нагрузки.
-                powerActiveGeneration = Node.Cols.Item("pg"); //активная мощность нагрузки.
-                powerRectiveGeneration = Node.Cols.Item("qg"); //реактивная мощность нагрузки.
-                voltageCalc = Node.Cols.Item("vras"); //Расчётное напряжение.
-                voltageAngle = Node.Cols.Item("delta"); //Расчётный угол.
+            LoadModel(pathCenter);
+            // Управление ВПТ
+            powerActiveLoad.set_ZN(5, 43.9); // 6 узел
+            powerActiveLoad.set_ZN(6, 28.1); // 7 узел
+            powerActiveLoad.set_ZN(7, 16.2); // 9 узел
+            powerActiveLoad.set_ZN(12, 43.9); // 26 узел
+            powerActiveLoad.set_ZN(13, 28.1); // 27 узел
+            powerActiveLoad.set_ZN(14, 16.2); // 29 узел
 
-                openModel.Text = "Модель загружена!";
-                openModel.Foreground = new SolidColorBrush(Colors.Green);
-            }
+            // Управление генерацией
+
+
+            calcRegim(Rastr);
+            centerF.Text = $"Fcenter = {Math.Round(freq.get_ZN(0), 3)}";
+
+            LoadModel(pathRight);
+            // Управление ВПТ
+            powerActiveGeneration.set_ZN(9, 43.9);  // 1 узел
+            powerActiveGeneration.set_ZN(10, 28.1); // 2 узел
+            powerActiveGeneration.set_ZN(11, 16.2); // 3 узел
+
+            // Управление генерацией
+            //powerActiveGeneration.set_ZN(2, 10);  // 8 узел
+
+            calcRegim(Rastr);
+            rightF.Text = $"Fright = {Math.Round(freq.get_ZN(0), 3)}";
+
+
+            LoadModel(pathLeft);
+            // Управление ВПТ
+            powerActiveGeneration.set_ZN(9, 43.9);  // 1 узел
+            powerActiveGeneration.set_ZN(10, 28.1); // 2 узел
+            powerActiveGeneration.set_ZN(11, 16.2); // 3 узел
+            
+            // Управление генерацией
+
+
+            calcRegim(Rastr);
+            leftF.Text = $"Fleft = {Math.Round(freq.get_ZN(0), 3)}";
+
+
+            openModel.Text = "Модель загружена!";
+            openModel.Foreground = new SolidColorBrush(Colors.Green);
         }
 
-        private void slider1_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+
+        public void LoadModel(string path)
         {
-            test.Text = slider1.Value.ToString();
-            double trackBar1_value = slider1.Value;
+            Rastr = new ASTRALib.Rastr();
+            Rastr.Load(ASTRALib.RG_KOD.RG_REPL, path, "");
 
-            if (path != null)
-            {
-                //Отправка исходных данных
-                powerActiveGeneration.set_ZN(5, slider1.Value);
-
-                //Расчет режима
-                calcRegim(Rastr);
-
-                freq1.Text = $"f = {Math.Round(freq.get_ZN(0), 3)}";
-                freq7.Text = $"f = {Math.Round(freq.get_ZN(1), 3)}";
-                sg6.Text = $"{Math.Round(powerActiveGeneration.get_ZN(5), 3)}+j·{Math.Round(powerRectiveGeneration.get_ZN(5), 3)}";
-            }
-
+            Node = Rastr.Tables.Item("node");
+            Vetv = Rastr.Tables.Item("vetv");
+            Islands = Rastr.Tables.Item("islands");
+            freq = Islands.Cols.Item("f");
+            numberBus = Node.Cols.Item("ny"); //Номер Узла
+            powerActiveLoad = Node.Cols.Item("pn"); //активная мощность нагрузки.
+            powerRectiveLoad = Node.Cols.Item("qn"); //реактивная мощность нагрузки.
+            powerActiveGeneration = Node.Cols.Item("pg"); //активная мощность нагрузки.
+            powerRectiveGeneration = Node.Cols.Item("qg"); //реактивная мощность нагрузки.
+            voltageCalc = Node.Cols.Item("vras"); //Расчётное напряжение.
+            voltageAngle = Node.Cols.Item("delta"); //Расчётный угол.
         }
+
+
+
         bool calcRegim(ASTRALib.IRastr inRastr)
         {
             ASTRALib.ITable ParamRgm = inRastr.Tables.Item("com_regim");
