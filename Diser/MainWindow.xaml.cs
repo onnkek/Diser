@@ -42,7 +42,7 @@ namespace Diser
         private void Button_Click(object sender, RoutedEventArgs e)
         {
             LoadModel(pathCenter);
-            
+            _links.Clear();
             // Create DCLink with default parameters
             _links.Add(new DCLink("DC1", 43.9, 21.8));
             _links.Add(new DCLink("DC2", 28.1, 1.6));
@@ -59,8 +59,18 @@ namespace Diser
             dc56.Text = GetPower(_links[0]);
             dc47.Text = GetPower(_links[1]);
             dc49.Text = GetPower(_links[2]);
-            
-            
+
+            // Change generation in nods 2 and 3 to the normal distribution
+            Random rnd = new Random();
+            double power = rnd.NextGaussian(20, 20);
+            powerActiveGeneration.set_ZN(GetIndex(2), power);
+            powerRectiveGeneration.set_ZN(GetIndex(2), power / 2);
+            power = rnd.NextGaussian(20, 20);
+            powerActiveGeneration.set_ZN(GetIndex(3), power);
+            powerRectiveGeneration.set_ZN(GetIndex(3), power / 2);
+
+
+
             calcRegim(Rastr);
             _fCenter = freq.get_ZN(0);
             fCenter.Text = Math.Round(freq.get_ZN(0), 3).ToString();
@@ -297,6 +307,23 @@ namespace Diser
             public string Name { get; set; }
             public double P { get; set; }
             public double Q { get; set; }
+        }
+        
+    }
+    public static class RandomExtensions
+    {
+        public static double NextGaussian(this Random rnd, double μ, double σ)
+        {
+            double u, v, s;
+            do
+            {
+                u = 2 * rnd.NextDouble() - 1;
+                v = 2 * rnd.NextDouble() - 1;
+                s = u * u + v * v;
+            }
+            while (u <= -1 || v <= -1 || s >= 1 || s == 0);
+            double r = Math.Sqrt(-2 * Math.Log(s) / s);
+            return μ + σ * r * u;
         }
     }
 }
