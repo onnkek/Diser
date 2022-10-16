@@ -7,17 +7,46 @@
         mc:Ignorable="d"
         Title="MainWindow" Height="1000" Width="2000">
     <Grid>
-        <TextBlock x:Name="sg6" Margin="667,163,1107,0" FontSize="14" Text="100+i*100" VerticalAlignment="Top" Foreground="Red"/>
-        <TextBlock x:Name="centerF" Margin="65,150,1709,0" FontSize="20" Text="100+i*100" VerticalAlignment="Top" Foreground="Red"/>
-        <TextBlock x:Name="rightF" Margin="65,206,1709,0" FontSize="20" Text="100+i*100" VerticalAlignment="Top" Foreground="Red"/>
-        <TextBlock x:Name="leftF" Margin="65,261,1709,0" FontSize="20" Text="100+i*100" VerticalAlignment="Top" Foreground="Red"/>
+        <TextBlock x:Name="fCenter" Text="NaN" HorizontalAlignment="Center" Margin="0,100,0,0" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="30" Foreground="Red"/>
+        <TextBlock x:Name="fRight" Text="NaN" HorizontalAlignment="Center" Margin="1400,100,0,0" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="30" Foreground="Red"/>
+        <TextBlock x:Name="fLeft" Text="NaN" HorizontalAlignment="Center" Margin="-1400,100,0,0" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="30" Foreground="Red"/>
+
+        <TextBlock x:Name="dc56" Text="NaN" HorizontalAlignment="Left" Margin="1380,390,0,0" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="25" Foreground="Blue"/>
+        <TextBlock x:Name="dc47" Text="NaN" HorizontalAlignment="Left" Margin="1500,510,0,0" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="25" Foreground="Blue"/>
+        <TextBlock x:Name="dc49" Text="NaN" HorizontalAlignment="Left" Margin="1430,650,0,0" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="25" Foreground="Blue"/>
+
+        <TextBlock x:Name="gen2" Text="NaN" HorizontalAlignment="Left" Margin="1090,640,0,0" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="18"/>
+        <TextBlock x:Name="gen3" Text="NaN" HorizontalAlignment="Left" Margin="1215,760,0,0" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="18"/>
+        <TextBlock x:Name="gen6" Text="NaN" HorizontalAlignment="Left" Margin="1500,305,0,0" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="18"/>
+        <TextBlock x:Name="gen8" Text="NaN" HorizontalAlignment="Left" Margin="1700,540,0,0" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="18"/>
+        <TextBlock x:Name="gen9" Text="NaN" HorizontalAlignment="Left" Margin="1674,834,0,0" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="18"/>
+
+        <TextBlock x:Name="load2" Text="NaN" HorizontalAlignment="Left" Margin="1010,610,0,0" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="18"/>
+        <TextBlock x:Name="load3" Text="NaN" HorizontalAlignment="Left" Margin="1140,730,0,0" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="18"/>
+        <TextBlock x:Name="load4" Text="NaN" HorizontalAlignment="Left" Margin="1230,470,0,0" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="18"/>
+        <TextBlock x:Name="load5" Text="NaN" HorizontalAlignment="Left" Margin="1290,250,0,0" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="18"/>
+
+        <TextBlock x:Name="load6" Text="NaN" HorizontalAlignment="Left" Margin="1490,415,0,0" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="18"/>
+        <TextBlock x:Name="load9" Text="NaN" HorizontalAlignment="Left" Margin="1530,800,0,0" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="18"/>
+        <TextBlock x:Name="load10" Text="NaN" HorizontalAlignment="Left" Margin="1790,650,0,0" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="18"/>
+        <TextBlock x:Name="load11" Text="NaN" HorizontalAlignment="Left" Margin="1780,485,0,0" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="18"/>
+        <TextBlock x:Name="load12" Text="NaN" HorizontalAlignment="Left" Margin="1780,245,0,0" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="18"/>
+        <TextBlock x:Name="load13" Text="NaN" HorizontalAlignment="Left" Margin="1895,302,0,0" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="18"/>
+        <TextBlock x:Name="load14" Text="NaN" HorizontalAlignment="Left" Margin="1895,770,0,0" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="18"/>
 
 
-        <TextBlock x:Name="openModel" Margin="238,22,1536,0" FontSize="20" Text="Модель не загружена" VerticalAlignment="Top" Foreground="Red"/>
-        <TextBlock x:Name="test" Margin="739,27,1035,0" FontSize="20" Text="test" VerticalAlignment="Top" Foreground="Black"/>
-        <Image Source="Resources/ААААА.png" Margin="216,432,342,24" Stretch="Uniform"/>
-        <Button Content="Загрузка модели" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Height="51" Width="212" FontSize="20" Click="Button_Click"/>
-        <Slider x:Name="slider1" TickPlacement="BottomRight" IsSnapToTickEnabled="True" HorizontalAlignment="Left" Margin="861,24,0,0" VerticalAlignment="Top" Width="343"  Foreground="Black" BorderBrush="Transparent"/>
+
+
+
+
+
+
+
+        <TextBlock x:Name="test" Margin="565,22,1209,0" FontSize="20" Text="test!" VerticalAlignment="Top" Foreground="Red"/>
+        <TextBlock x:Name="openModel" Margin="238,22,1536,0" FontSize="20" Text="Режим не рассчитан!" VerticalAlignment="Top" Foreground="Red"/>
+        <Image Source="Resources/model.png" Margin="-104,-638,-104,-4" Stretch="Uniform"/>
+        <Button Content="Режим" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Height="51" Width="212" FontSize="20" Click="Button_Click"/>
+        <Button Content="Автоматика" HorizontalAlignment="Left" Margin="10,69,0,0" VerticalAlignment="Top" Height="51" Width="212" FontSize="20" Click="Button_Click_1"/>
 
     </Grid>
 </Window>

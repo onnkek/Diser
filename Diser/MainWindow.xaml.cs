@@ -1,7 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Media;
 using Microsoft.Win32;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Diser
 {
@@ -26,65 +30,164 @@ namespace Diser
         private static ASTRALib.ICol voltageAngle;           //Расчётный угол.
         private static ASTRALib.ICol freq;                   //Частота.
 
-        private static int trackBar1_delta = 50;
+        private static int _tolerancePower = 1;
+        private static double _fCenter;
+        private static double _fRight;
+        private static double _fLeft;
+        private static List<DCLink> _links = new List<DCLink>();
         public MainWindow()
         {
             InitializeComponent();
-            slider1.Minimum = 100;
-            slider1.Maximum = 1000;
-            slider1.TickFrequency = trackBar1_delta;
-            centerF.Text = $"";
-            sg6.Text = $"";
-            rightF.Text = $"";
         }
-
         private void Button_Click(object sender, RoutedEventArgs e)
         {
             LoadModel(pathCenter);
-            // Управление ВПТ
-            powerActiveLoad.set_ZN(5, 43.9); // 6 узел
-            powerActiveLoad.set_ZN(6, 28.1); // 7 узел
-            powerActiveLoad.set_ZN(7, 16.2); // 9 узел
-            powerActiveLoad.set_ZN(12, 43.9); // 26 узел
-            powerActiveLoad.set_ZN(13, 28.1); // 27 узел
-            powerActiveLoad.set_ZN(14, 16.2); // 29 узел
+            
+            // Create DCLink with default parameters
+            _links.Add(new DCLink("DC1", 43.9, 21.8));
+            _links.Add(new DCLink("DC2", 28.1, 1.6));
+            _links.Add(new DCLink("DC3", 16.2, 3.6));
 
-            // Управление генерацией
+            // Generation management
+            powerActiveLoad.set_ZN(GetIndex(6), _links[0].P); // 6 узел
+            powerActiveLoad.set_ZN(GetIndex(7), _links[1].P); // 7 узел
+            powerActiveLoad.set_ZN(GetIndex(9), _links[2].P); // 9 узел
+            powerActiveLoad.set_ZN(GetIndex(26), 43.9); // 26 узел
+            powerActiveLoad.set_ZN(GetIndex(27), 28.1); // 27 узел
+            powerActiveLoad.set_ZN(GetIndex(29), 16.2); // 29 узел
 
-
+            dc56.Text = GetPower(_links[0]);
+            dc47.Text = GetPower(_links[1]);
+            dc49.Text = GetPower(_links[2]);
+            
+            
             calcRegim(Rastr);
-            centerF.Text = $"Fcenter = {Math.Round(freq.get_ZN(0), 3)}";
+            _fCenter = freq.get_ZN(0);
+            fCenter.Text = Math.Round(freq.get_ZN(0), 3).ToString();
+            load2.Text = GetPower(2, true);
+            load3.Text = GetPower(3, true);
+            load4.Text = GetPower(4, true);
+            load5.Text = GetPower(5, true);
+            gen2.Text = GetPower(2, false);
+            gen3.Text = GetPower(3, false);
+
 
             LoadModel(pathRight);
-            // Управление ВПТ
-            powerActiveGeneration.set_ZN(9, 43.9);  // 1 узел
-            powerActiveGeneration.set_ZN(10, 28.1); // 2 узел
-            powerActiveGeneration.set_ZN(11, 16.2); // 3 узел
-
-            // Управление генерацией
-            //powerActiveGeneration.set_ZN(2, 10);  // 8 узел
+            
+            // Generation management
+            powerActiveGeneration.set_ZN(GetIndex(1), _links[0].P);  // 1 узел
+            powerActiveGeneration.set_ZN(GetIndex(2), _links[1].P); // 2 узел
+            powerActiveGeneration.set_ZN(GetIndex(3), _links[2].P); // 3 узел
 
             calcRegim(Rastr);
-            rightF.Text = $"Fright = {Math.Round(freq.get_ZN(0), 3)}";
+            _fRight = freq.get_ZN(0);
+            fRight.Text = Math.Round(freq.get_ZN(0), 3).ToString();
 
+            load6.Text = GetPower(6, true);
+            load9.Text = GetPower(9, true);
+            load10.Text = GetPower(10, true);
+            load11.Text = GetPower(11, true);
+            load12.Text = GetPower(12, true);
+            load13.Text = GetPower(13, true);
+            load14.Text = GetPower(14, true);
+            gen6.Text = GetPower(6, false);
+            gen8.Text = GetPower(8, false);
+            gen9.Text = GetPower(9, false);
 
             LoadModel(pathLeft);
-            // Управление ВПТ
-            powerActiveGeneration.set_ZN(9, 43.9);  // 1 узел
-            powerActiveGeneration.set_ZN(10, 28.1); // 2 узел
-            powerActiveGeneration.set_ZN(11, 16.2); // 3 узел
+
+            // Generation management
+            powerActiveGeneration.set_ZN(GetIndex(1), 43.9);  // 1 узел
+            powerActiveGeneration.set_ZN(GetIndex(2), 28.1); // 2 узел
+            powerActiveGeneration.set_ZN(GetIndex(3), 16.2); // 3 узел
             
-            // Управление генерацией
-
-
             calcRegim(Rastr);
-            leftF.Text = $"Fleft = {Math.Round(freq.get_ZN(0), 3)}";
+            _fLeft = freq.get_ZN(0);
+            fLeft.Text = Math.Round(freq.get_ZN(0), 3).ToString();
 
-
-            openModel.Text = "Модель загружена!";
+            openModel.Text = "Режим рассчитан!";
             openModel.Foreground = new SolidColorBrush(Colors.Green);
         }
+        
+        private void Button_Click_1(object sender, RoutedEventArgs e)
+        {
+            for(int i = 0; i < 20 & Math.Abs(50 - _fCenter) > 0.001; i++)
+            {
+                double dF = 50 - _fCenter;
+                LoadModel(pathCenter);
 
+                // Generation management to maintain frequency
+                foreach (var link in _links)
+                {
+                    link.P = link.P - link.P * dF / 50 / 3;
+                    link.Q = link.Q - link.Q * dF / 50 / 3;
+                }
+
+                powerActiveLoad.set_ZN(GetIndex(6), _links[0].P); // 6 узел
+                powerActiveLoad.set_ZN(GetIndex(7), _links[1].P); // 7 узел
+                powerActiveLoad.set_ZN(GetIndex(9), _links[2].P); // 9 узел
+                powerActiveLoad.set_ZN(GetIndex(26), 43.9); // 26 узел
+                powerActiveLoad.set_ZN(GetIndex(27), 28.1); // 27 узел
+                powerActiveLoad.set_ZN(GetIndex(29), 16.2); // 29 узел
+
+                dc56.Text = GetPower(_links[0]);
+                dc47.Text = GetPower(_links[1]);
+                dc49.Text = GetPower(_links[2]);
+
+
+                calcRegim(Rastr);
+                _fCenter = freq.get_ZN(0);
+                fCenter.Text = i + " : " + Math.Round(freq.get_ZN(0), 3).ToString();
+                load2.Text = GetPower(2, true);
+                load3.Text = GetPower(3, true);
+                load4.Text = GetPower(4, true);
+                load5.Text = GetPower(5, true);
+                gen2.Text = GetPower(2, false);
+                gen3.Text = GetPower(3, false);
+
+
+                //LoadModel(pathRight);
+                //// Управление ВПТ
+
+                //powerActiveGeneration.set_ZN(GetIndex(1), P56);  // 1 узел
+                //powerActiveGeneration.set_ZN(GetIndex(2), P47); // 2 узел
+                //powerActiveGeneration.set_ZN(GetIndex(3), P49); // 3 узел
+
+
+                //// Управление генерацией
+                ////powerActiveGeneration.set_ZN(2, 10);  // 8 узел
+
+                //calcRegim(Rastr);
+                //fRight.Text = Math.Round(freq.get_ZN(0), 3).ToString();
+
+                //load6.Text = GetPower(6, true);
+                //load9.Text = GetPower(9, true);
+                //load10.Text = GetPower(10, true);
+                //load11.Text = GetPower(11, true);
+                //load12.Text = GetPower(12, true);
+                //load13.Text = GetPower(13, true);
+                //load14.Text = GetPower(14, true);
+                //gen6.Text = GetPower(6, false);
+                //gen8.Text = GetPower(8, false);
+                //gen9.Text = GetPower(9, false);
+
+                //LoadModel(pathLeft);
+                //// Управление ВПТ
+                //powerActiveGeneration.set_ZN(GetIndex(1), 43.9);  // 1 узел
+                //powerActiveGeneration.set_ZN(GetIndex(2), 28.1); // 2 узел
+                //powerActiveGeneration.set_ZN(GetIndex(3), 16.2); // 3 узел
+                //                                                 // Управление генерацией
+
+
+                //calcRegim(Rastr);
+                //fLeft.Text = Math.Round(freq.get_ZN(0), 3).ToString();
+
+
+                openModel.Text = "Режим рассчитан!";
+                openModel.Foreground = new SolidColorBrush(Colors.Green);
+            }    
+            
+        }
 
         public void LoadModel(string path)
         {
@@ -108,6 +211,11 @@ namespace Diser
 
         bool calcRegim(ASTRALib.IRastr inRastr)
         {
+            for (int i = 0; i < Node.Count; i++)
+            {
+                voltageCalc.set_ZN(i, 0);
+                voltageAngle.set_ZN(i, 0);
+            }
             ASTRALib.ITable ParamRgm = inRastr.Tables.Item("com_regim");
             ASTRALib.ICol statusRgm = ParamRgm.Cols.Item("status");
             inRastr.rgm(""); //Расчет режима 
@@ -116,6 +224,79 @@ namespace Diser
                 return true;
             else
                 return false;
+        }
+        private static string GetPower(DCLink link)
+        {
+            string result = "";
+            if (link.P != 0)
+                result += Math.Round(link.P, _tolerancePower);
+
+            if (link.Q > 0)
+                result += "+j∙" + Math.Round(link.Q, _tolerancePower);
+            if (link.Q < 0)
+                result += "-j∙" + Math.Round(link.Q, _tolerancePower) * -1;
+            return result;
+        }
+        private static string GetPower(double P, double Q)
+        {
+            string result = "";
+            if (P != 0)
+                result += Math.Round(P, _tolerancePower);
+
+            if (Q > 0)
+                result += "+j∙" + Math.Round(Q, _tolerancePower);
+            if (Q < 0)
+                result += "-j∙" + Math.Round(Q, _tolerancePower) * -1;
+            return result;
+        }
+        private static string GetPower(int number, bool load)
+        {
+            string result = "";
+            if (load)
+            {
+                if (powerActiveLoad.get_ZN(GetIndex(number)) != 0)
+                    result += Math.Round(powerActiveLoad.get_ZN(GetIndex(number)), _tolerancePower);
+
+                if (powerRectiveLoad.get_ZN(GetIndex(number)) > 0)
+                    result += "+j∙" + Math.Round(powerRectiveLoad.get_ZN(GetIndex(number)), _tolerancePower);
+                if (powerRectiveLoad.get_ZN(GetIndex(number)) < 0)
+                    result += "-j∙" + Math.Round(powerRectiveLoad.get_ZN(GetIndex(number)), _tolerancePower) * -1;
+            }
+            else
+            {
+                if (powerActiveGeneration.get_ZN(GetIndex(number)) != 0)
+                    result += Math.Round(powerActiveGeneration.get_ZN(GetIndex(number)), _tolerancePower);
+
+                if (powerRectiveGeneration.get_ZN(GetIndex(number)) > 0)
+                    result += "+j∙" + Math.Round(powerRectiveGeneration.get_ZN(GetIndex(number)), _tolerancePower);
+                if (powerRectiveGeneration.get_ZN(GetIndex(number)) < 0)
+                    result += "-j∙" + Math.Round(powerRectiveGeneration.get_ZN(GetIndex(number)), _tolerancePower) * -1;
+            }
+            return result;
+        }
+
+        private static int GetIndex(int number)
+        {
+            int result = -1;
+            for (int i = 0; i < Node.Count; i++)
+            {
+                if (numberBus.ZN[i] == number)
+                    result = i;
+            }
+            return result;
+        }
+
+        public class DCLink
+        {
+            public DCLink(string name, double p, double q)
+            {
+                Name = name;
+                P = p;
+                Q = q;
+            }
+            public string Name { get; set; }
+            public double P { get; set; }
+            public double Q { get; set; }
         }
     }
 }
