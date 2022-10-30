@@ -6,6 +6,7 @@ using Microsoft.Win32;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Text;
 
 namespace Diser
 {
@@ -30,37 +31,135 @@ namespace Diser
         private static ASTRALib.ICol voltageAngle;           //Расчётный угол.
         private static ASTRALib.ICol freq;                   //Частота.
 
-        private static int _tolerancePower = 1;
         private static double _fCenter;
         private static double _fRight;
         private static double _fLeft;
-        private static List<DCLink> _links = new List<DCLink>();
+        private static List<DCLink> _linksCR = new List<DCLink>();
+        private static List<DCLink> _linksCL = new List<DCLink>();
         private static List<Generation> _generationCenter = new List<Generation>();
         private static List<Generation> _generationRight = new List<Generation>();
         private static List<Generation> _generationLeft = new List<Generation>();
+        private static LoadCollection _loadCenter = new LoadCollection();
+        private static LoadCollection _loadRight = new LoadCollection();
+        private static Random _random = new Random();
+        private static double _kLoad;
         public MainWindow()
         {
             InitializeComponent();
         }
+        private void Button_Click_2(object sender, RoutedEventArgs e)
+        {
+
+
+            List<double> fCenter = new List<double>();
+            List<double> fRight = new List<double>();
+            List<double> fLeft = new List<double>();
+            List<double> fCenterAfterOpt = new List<double>();
+            List<double> fRightAfterOpt = new List<double>();
+            List<double> fLeftAfterOpt = new List<double>();
+            List<double> count = new List<double>();
+
+            List<List<double>> result = new List<List<double>>() { count,
+                                                                   fCenter,
+                                                                   fRight,
+                                                                   fLeft,
+                                                                   fCenterAfterOpt,
+                                                                   fRightAfterOpt,
+                                                                   fLeftAfterOpt };
+
+            for (int i = 0; i < 50; i++)
+            {
+                double[] freq = InitialModel();
+                fCenter.Add(freq[0]);
+                fRight.Add(freq[1]);
+                fLeft.Add(freq[2]);
+                freq = FindFreq();
+                fCenterAfterOpt.Add(freq[0]);
+                fRightAfterOpt.Add(freq[1]);
+                fLeftAfterOpt.Add(freq[2]);
+                count.Add(freq[3]);
+            }
+
+            string text = "";
+            for (var i = 0; i < result[0].Count; i++)
+            {
+                text += $"C:{result[0][i]}| ";
+                text += $"C[{result[4][i]:F2}]|   ";
+                text += $"C:{result[1][i]:F2}|";
+                text += $"R:{result[2][i]:F2}|";
+                text += $"L:{result[3][i]:F2}|";
+                text += $"R[{result[5][i]:F2}]|";
+                text += $"L[{result[6][i]:F2}]|";
+                text += $"\r\n";
+            }
+            MessageBox.Show(text);
+
+        }
         private void Button_Click(object sender, RoutedEventArgs e)
         {
-            _links.Clear();
+            InitialModel();
+        }
+        public double[] FindFreq()
+        {
+            int counter = 0;
+            double[] freq = new double[4];
+
+
+            for (int i = 0; i < 80 & Math.Abs(50 - _fCenter) > 0.001; i++)
+            {
+                double dF = 50 - _fCenter;
+
+                foreach (var link in _linksCL)
+                {
+                    if (link.S.X > 0)
+                        link.S += link.S * dF / 50 / 3;
+                    else if (link.S.X < 5 && link.S.X > -5)
+                        link.S -= link.S * dF / 50 * 5;
+                    else
+                        link.S -= link.S * dF / 50 / 3;
+                }
+                foreach (var link in _linksCR)
+                {
+                    if (link.S.X > 0)
+                        link.S += link.S * dF / 50 / 3;
+                    else if (link.S.X < 5 && link.S.X > -5)
+                        link.S -= link.S * dF / 50 * 5;
+                    else
+                        link.S -= link.S * dF / 50 / 3;
+
+
+                    test.Text = $"P:{link.S.X}   dF:{dF}   Add:{link.S.X * dF / 50 / 6}";
+                }
+                freq = RunModel();
+                counter++;
+            }
+
+
+            freq[3] = counter;
+            return freq;
+        }
+        public double[] InitialModel()
+        {
+            _kLoad = 1;
+            _linksCR.Clear();
+            _linksCL.Clear();
             _generationCenter.Clear();
             _generationRight.Clear();
             _generationLeft.Clear();
 
             // Create DCLink with default parameters
-            _links.Add(new DCLink("DC1_Right", 43.9, 21.8, 6, 1));
-            _links.Add(new DCLink("DC2_Right", 28.1, 1.6, 7, 2));
-            _links.Add(new DCLink("DC3_Right", 16.2, 3.6, 9, 3));
+            _linksCR.Add(new DCLink("C6-R1", new Complex(43.9, 21.8), 6, 1));
+            _linksCR.Add(new DCLink("C7-R2", new Complex(28.1, 1.6), 7, 2));
+            _linksCR.Add(new DCLink("C9-R3", new Complex(16.2, 3.6), 9, 3));
 
-            _links.Add(new DCLink("DC1_Left", 43.9, 21.8, 26, 1));
-            _links.Add(new DCLink("DC2_Left", 28.1, 1.6, 27, 2));
-            _links.Add(new DCLink("DC2_Left", 16.2, 3.6, 29, 3));
+            _linksCL.Add(new DCLink("C26-L1", new Complex(43.9, 21.8), 26, 1));
+            _linksCL.Add(new DCLink("C27-L2", new Complex(28.1, 1.6), 27, 2));
+            _linksCL.Add(new DCLink("C29-L3", new Complex(16.2, 3.6), 29, 3));
 
             _generationCenter.Add(new Generation(20, 20, 3));
-            
-            double P = 87.7 / 3;
+            _generationCenter.Add(new Generation(20, 20, 23));
+
+            double P = 30;
 
             _generationRight.Add(new Generation(P, P, 6));
             _generationRight.Add(new Generation(P, P, 8));
@@ -70,42 +169,50 @@ namespace Diser
             _generationLeft.Add(new Generation(P, P, 8));
             _generationLeft.Add(new Generation(P, P, 9));
 
-            RunStartModel();
+
+            return RunModel();
         }
-        public void RunStartModel()
+        public double[] RunModel()
         {
+            double[] result = new double[4];
             LoadModel(pathCenter);
-            
+            _loadCenter.GetLoadCollection();
+            _loadCenter.SetLoadCollection(_kLoad);
             // Settings generation
-            foreach (var link in _links)
+            foreach (var link in _linksCR)
+                link.SetGenerationDCLink(true);
+            foreach (var link in _linksCL)
                 link.SetGenerationDCLink(true);
 
             foreach (var gen in _generationCenter)
                 gen.SetPowerGeneration();
 
 
+
             calcRegim(Rastr);
 
             #region Output Text
-            dc56.Text = GetPower(_links[0]);
-            dc47.Text = GetPower(_links[1]);
-            dc49.Text = GetPower(_links[2]);
+            dc56.Text = _linksCR[0].S.ToString();
+            dc47.Text = _linksCR[1].S.ToString();
+            dc49.Text = _linksCR[2].S.ToString();
             _fCenter = freq.get_ZN(0);
             fCenter.Text = Math.Round(freq.get_ZN(0), 3).ToString();
-            load2.Text = GetPower(2, true);
-            load3.Text = GetPower(3, true);
-            load4.Text = GetPower(4, true);
-            load5.Text = GetPower(5, true);
-            gen2.Text = GetPower(2, false);
-            gen3.Text = GetPower(3, false);
+            load2.Text = GetPower(2, true).ToString();
+            load3.Text = GetPower(3, true).ToString();
+            load4.Text = GetPower(4, true).ToString();
+            load5.Text = GetPower(5, true).ToString();
+            gen2.Text = GetPower(2, false).ToString();
+            gen3.Text = GetPower(3, false).ToString();
             #endregion
 
             LoadModel(pathRight);
-
+            _loadRight.GetLoadCollection();
+            _loadRight.SetLoadCollection(_kLoad);
             // Settings generation
 
-            foreach (var link in _links.Where(x => x.Name.Contains("Right")))
+            foreach (var link in _linksCR)
                 link.SetLoadDCLink(false);
+
 
             foreach (var gen in _generationRight)
                 gen.SetPowerGeneration();
@@ -116,22 +223,25 @@ namespace Diser
             _fRight = freq.get_ZN(0);
             fRight.Text = Math.Round(freq.get_ZN(0), 3).ToString();
 
-            load6.Text = GetPower(6, true);
-            load9.Text = GetPower(9, true);
-            load10.Text = GetPower(10, true);
-            load11.Text = GetPower(11, true);
-            load12.Text = GetPower(12, true);
-            load13.Text = GetPower(13, true);
-            load14.Text = GetPower(14, true);
-            gen6.Text = GetPower(6, false);
-            gen8.Text = GetPower(8, false);
-            gen9.Text = GetPower(9, false);
+            load6.Text = GetPower(6, true).ToString();
+            load9.Text = GetPower(9, true).ToString();
+            load10.Text = GetPower(10, true).ToString();
+            load11.Text = GetPower(11, true).ToString();
+            load12.Text = GetPower(12, true).ToString();
+            load13.Text = GetPower(13, true).ToString();
+            load14.Text = GetPower(14, true).ToString();
+            gen6.Text = GetPower(6, false).ToString();
+            gen8.Text = GetPower(8, false).ToString();
+            gen9.Text = GetPower(9, false).ToString();
             #endregion
 
 
             LoadModel(pathLeft);
 
-            foreach (var link in _links.Where(x => x.Name.Contains("Left")))
+            _loadRight.GetLoadCollection();
+            _loadRight.SetLoadCollection(_kLoad);
+
+            foreach (var link in _linksCL)
                 link.SetLoadDCLink(false);
 
             foreach (var gen in _generationLeft)
@@ -147,28 +257,17 @@ namespace Diser
 
             openModel.Text = "Режим рассчитан!";
             openModel.Foreground = new SolidColorBrush(Colors.Green);
+
+            result[0] = _fCenter;
+            result[1] = _fRight;
+            result[2] = _fLeft;
+            return result;
         }
 
 
         private void Button_Click_1(object sender, RoutedEventArgs e)
         {
-            string test = "";
-            for (int i = 0; i < 20 & Math.Abs(50 - _fCenter) > 0.001; i++)
-            {
-                double dF = 50 - _fCenter;
-                
-
-                // Generation management to maintain frequency
-                foreach (var link in _links)
-                {
-                    link.P = link.P - link.P * dF / 50 / 3;
-                    link.Q = link.Q - link.Q * dF / 50 / 3;
-                    test += $"ВПТ:{link.Name} P:{link.P:F2} Q:{link.Q:F2}\r\n";
-                }
-
-                RunStartModel();
-            }
-            MessageBox.Show(test);
+            FindFreq();
         }
 
         public void LoadModel(string path)
@@ -207,52 +306,16 @@ namespace Diser
             else
                 return false;
         }
-        private static string GetPower(DCLink link)
+        private static Complex GetPower(int number, bool load)
         {
-            string result = "";
-            if (link.P != 0)
-                result += Math.Round(link.P, _tolerancePower);
-
-            if (link.Q > 0)
-                result += "+j∙" + Math.Round(link.Q, _tolerancePower);
-            if (link.Q < 0)
-                result += "-j∙" + Math.Round(link.Q, _tolerancePower) * -1;
-            return result;
-        }
-        private static string GetPower(double P, double Q)
-        {
-            string result = "";
-            //if (P != 0)
-            result += Math.Round(P, _tolerancePower);
-
-            if (Q >= 0)
-                result += "+j∙" + Math.Round(Q, _tolerancePower);
-            if (Q < 0)
-                result += "-j∙" + Math.Round(Q, _tolerancePower) * -1;
-            return result;
-        }
-        private static string GetPower(int number, bool load)
-        {
-            string result = "";
+            Complex result;
             if (load)
-            {
-                //if (powerActiveLoad.get_ZN(GetIndex(number)) != 0)
-                result += Math.Round(powerActiveLoad.get_ZN(GetIndex(number)), _tolerancePower);
-
-                if (powerRectiveLoad.get_ZN(GetIndex(number)) >= 0)
-                    result += "+j∙" + Math.Round(powerRectiveLoad.get_ZN(GetIndex(number)), _tolerancePower);
-                if (powerRectiveLoad.get_ZN(GetIndex(number)) < 0)
-                    result += "-j∙" + Math.Round(powerRectiveLoad.get_ZN(GetIndex(number)), _tolerancePower) * -1;
-            }
+                result = new Complex(powerActiveLoad.get_ZN(GetIndex(number)),
+                                     powerRectiveLoad.get_ZN(GetIndex(number)));
             else
             {
-                //if (powerActiveGeneration.get_ZN(GetIndex(number)) != 0)
-                result += Math.Round(powerActiveGeneration.get_ZN(GetIndex(number)), _tolerancePower);
-
-                if (powerRectiveGeneration.get_ZN(GetIndex(number)) >= 0)
-                    result += "+j∙" + Math.Round(powerRectiveGeneration.get_ZN(GetIndex(number)), _tolerancePower);
-                if (powerRectiveGeneration.get_ZN(GetIndex(number)) < 0)
-                    result += "-j∙" + Math.Round(powerRectiveGeneration.get_ZN(GetIndex(number)), _tolerancePower) * -1;
+                result = new Complex(powerActiveGeneration.get_ZN(GetIndex(number)),
+                                     powerRectiveGeneration.get_ZN(GetIndex(number)));
             }
             return result;
         }
@@ -268,19 +331,99 @@ namespace Diser
             return result;
         }
 
+        public class Complex
+        {
+            public Complex(double x, double y)
+            {
+                X = x;
+                Y = y;
+            }
+            public Complex() { }
+            public double X { get; set; }
+            public double Y { get; set; }
+            public override string ToString()
+            {
+                string result = $"{X:F2}";
+                if (Y > 0)
+                    result += "+j∙" + $"{Y:F2}";
+                else
+                    result += "-j∙" + $"{Y * -1:F2}";
+                return result;
+            }
+            public static Complex operator +(Complex arg1, Complex arg2)
+            {
+                return new Complex(arg1.X + arg2.X, arg1.Y + arg2.Y);
+            }
+            public static Complex operator +(Complex arg1, double arg2)
+            {
+                return new Complex(arg1.X + arg2, arg1.Y + arg2);
+            }
+            public static Complex operator -(Complex arg1, Complex arg2)
+            {
+                return new Complex(arg1.X - arg2.X, arg1.Y - arg2.Y);
+            }
+            public static Complex operator -(Complex arg1, double arg2)
+            {
+                return new Complex(arg1.X - arg2, arg1.Y - arg2);
+            }
+            public static Complex operator *(Complex arg1, Complex arg2)
+            {
+                return new Complex(arg1.X * arg2.X, arg1.Y * arg2.Y);
+            }
+            public static Complex operator *(Complex arg1, double arg2)
+            {
+                return new Complex(arg1.X * arg2, arg1.Y * arg2);
+            }
+            public static Complex operator /(Complex arg1, Complex arg2)
+            {
+                return new Complex(arg1.X / arg2.X, arg1.Y / arg2.Y);
+            }
+            public static Complex operator /(Complex arg1, double arg2)
+            {
+                return new Complex(arg1.X / arg2, arg1.Y / arg2);
+            }
+        }
+        public class LoadCollection
+        {
+            public List<Load> Loads { get; set; }
+            public void GetLoadCollection()
+            {
+                Loads = new List<Load>();
+                for (int i = 0; i < Node.Count; i++)
+                {
+                    Loads.Add(new Load(i, new Complex(powerActiveLoad.get_ZN(i), powerRectiveLoad.get_ZN(i))));
+                }
+            }
+            public void SetLoadCollection(double k)
+            {
+                foreach (var load in Loads)
+                {
+                    powerActiveLoad.set_ZN(load.Node, load.S.X * k);
+                    powerRectiveLoad.set_ZN(load.Node, load.S.Y * k);
+                }
+            }
+        }
+        public class Load
+        {
+            public Load(int node, Complex s)
+            {
+                Node = node;
+                S = s;
+            }
+            public int Node { get; set; }
+            public Complex S { get; set; }
+        }
         public class DCLink
         {
-            public DCLink(string name, double p, double q, int node1, int node2)
+            public DCLink(string name, Complex s, int node1, int node2)
             {
                 Name = name;
-                P = p;
-                Q = q;
+                S = s;
                 Node1 = node1;
                 Node2 = node2;
             }
             public string Name { get; set; }
-            public double P { get; set; }
-            public double Q { get; set; }
+            public Complex S { get; set; }
             public int Node1 { get; set; }
             public int Node2 { get; set; }
             public void SetGenerationDCLink(bool isNode1)
@@ -290,8 +433,8 @@ namespace Diser
                     node = Node1;
                 else
                     node = Node2;
-                powerActiveGeneration.set_ZN(GetIndex(node), P);
-                powerRectiveGeneration.set_ZN(GetIndex(node), Q);
+                powerActiveGeneration.set_ZN(GetIndex(node), S.X);
+                powerRectiveGeneration.set_ZN(GetIndex(node), S.Y);
             }
             public void SetLoadDCLink(bool isNode1)
             {
@@ -300,8 +443,8 @@ namespace Diser
                     node = Node1;
                 else
                     node = Node2;
-                powerActiveLoad.set_ZN(GetIndex(node), P);
-                powerRectiveLoad.set_ZN(GetIndex(node), Q);
+                powerActiveLoad.set_ZN(GetIndex(node), S.X);
+                powerRectiveLoad.set_ZN(GetIndex(node), S.Y);
             }
         }
 
@@ -316,30 +459,26 @@ namespace Diser
             }
             public double Expectation { get; set; }
             public double Volatility { get; set; }
-            public double P { get; set; }
-            public double Q { get; set; }
+            public Complex S { get; set; }
             public int Node { get; set; }
             public void ChangeGeneration()
             {
-                P = new Random().NextGaussian(Expectation, Volatility);
-                Q = P / 2;
+                double P = NextGaussian(Expectation, Volatility);
+                S = new Complex(P, P / 2);
             }
             public void SetPowerGeneration()
             {
-                powerActiveGeneration.set_ZN(GetIndex(Node), P);
-                powerRectiveGeneration.set_ZN(GetIndex(Node), Q);
+                powerActiveGeneration.set_ZN(GetIndex(Node), S.X);
+                powerRectiveGeneration.set_ZN(GetIndex(Node), S.Y);
             }
         }
-    }
-    public static class RandomExtensions
-    {
-        public static double NextGaussian(this Random rnd, double μ, double σ)
+        public static double NextGaussian(double μ, double σ)
         {
             double u, v, s;
             do
             {
-                u = 2 * rnd.NextDouble() - 1;
-                v = 2 * rnd.NextDouble() - 1;
+                u = 2 * _random.NextDouble() - 1;
+                v = 2 * _random.NextDouble() - 1;
                 s = u * u + v * v;
             }
             while (u <= -1 || v <= -1 || s >= 1 || s == 0);

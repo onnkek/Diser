@@ -42,11 +42,11 @@
 
 
 
-        <TextBlock x:Name="test" Margin="565,22,1209,0" FontSize="20" Text="test!" VerticalAlignment="Top" Foreground="Red"/>
+        <TextBlock x:Name="test" Margin="565,22,237,0" FontSize="20" Text="test!" VerticalAlignment="Top" Foreground="Red" Height="78"/>
         <TextBlock x:Name="openModel" Margin="238,22,1536,0" FontSize="20" Text="Режим не рассчитан!" VerticalAlignment="Top" Foreground="Red"/>
         <Image Source="Resources/model.png" Margin="-104,-638,-104,-4" Stretch="Uniform"/>
         <Button Content="Режим" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Height="51" Width="212" FontSize="20" Click="Button_Click"/>
         <Button Content="Автоматика" HorizontalAlignment="Left" Margin="10,69,0,0" VerticalAlignment="Top" Height="51" Width="212" FontSize="20" Click="Button_Click_1"/>
-
+        <Button Content="Режим много" HorizontalAlignment="Left" Margin="10,129,0,0" VerticalAlignment="Top" Height="51" Width="212" FontSize="20" Click="Button_Click_2"/>
     </Grid>
 </Window>
