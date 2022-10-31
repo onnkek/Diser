@@ -103,32 +103,21 @@ namespace Diser
         {
             int counter = 0;
             double[] freq = new double[4];
-
-
-            for (int i = 0; i < 80 & Math.Abs(50 - _fCenter) > 0.001; i++)
+            double acceleration;
+            if (_fCenter > 50)
+                acceleration = _fCenter / 40;
+            else
+                acceleration = 80 / _fCenter;
+            for (int i = 0; i < 100 & Math.Abs(50 - _fCenter) > 0.001; i++)
             {
                 double dF = 50 - _fCenter;
-
                 foreach (var link in _linksCL)
-                {
-                    if (link.S.X > 0)
-                        link.S += link.S * dF / 50 / 3;
-                    else if (link.S.X < 5 && link.S.X > -5)
-                        link.S -= link.S * dF / 50 * 5;
-                    else
-                        link.S -= link.S * dF / 50 / 3;
-                }
+                    link.S += 30 * dF / 50 / acceleration;
                 foreach (var link in _linksCR)
                 {
-                    if (link.S.X > 0)
-                        link.S += link.S * dF / 50 / 3;
-                    else if (link.S.X < 5 && link.S.X > -5)
-                        link.S -= link.S * dF / 50 * 5;
-                    else
-                        link.S -= link.S * dF / 50 / 3;
-
-
-                    test.Text = $"P:{link.S.X}   dF:{dF}   Add:{link.S.X * dF / 50 / 6}";
+                    link.S += 30 * dF / 50 / acceleration;
+                    
+                    test.Text = $"count:{counter}   P:{link.S.X}   dF:{dF}   Add:{link.S.X * dF / 50 / 6}";
                 }
                 freq = RunModel();
                 counter++;
@@ -140,7 +129,7 @@ namespace Diser
         }
         public double[] InitialModel()
         {
-            _kLoad = 1;
+            _kLoad = 0.5;
             _linksCR.Clear();
             _linksCL.Clear();
             _generationCenter.Clear();
