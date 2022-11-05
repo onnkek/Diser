@@ -63,6 +63,27 @@ namespace Diser
             fCenter.Text = _model.FrequencyCenter.ToString();
             fLeft.Text = _model.FrequencyLeft.ToString();
         }
+        public static void SetPowerDCLinks(Model model, double S)
+        {
+            foreach (var link in model.DCLinksCenterLeft)
+                link.S += S;
+            foreach (var link in model.DCLinksCenterRight)
+                link.S += S;
+        }
+        public static void SetDefaultS(Model model)
+        {
+            foreach (var link in model.DCLinksCenterLeft)
+                link.S = link.DefaultS;
+            foreach (var link in model.DCLinksCenterRight)
+                link.S = link.DefaultS;
+        }
+        public static void SetS(Model model)
+        {
+            foreach (var link in model.DCLinksCenterLeft)
+                link.DefaultS = link.S;
+            foreach (var link in model.DCLinksCenterRight)
+                link.DefaultS = link.S;
+        }
         public void FrequencyOptimization(Model model)
         {
             int counter = 0;
@@ -70,59 +91,105 @@ namespace Diser
             model.StartingFrequencyCenter = model.FrequencyCenter;
             model.StartingFrequencyRight = model.FrequencyRight;
             model.StartingFrequencyLeft = model.FrequencyLeft;
-            Trace.WriteLine("СТАРТ: " + model.StartingFrequencyCenter);
-            //if (model.FrequencyCenter > 50)
-            //    acceleration = model.FrequencyCenter / 40;
-            //else
-            //    acceleration = 80 / model.FrequencyCenter;
+            Trace.WriteLine("СТАРТ: " + (model.StartingFrequencyCenter) + "  ВПТ: " + model.DCLinksCenterRight[0].S);
+            
+            for(int i = 0; i < 2; i++)
+            {
+                double dF0 = model.FrequencyCenter - 50;
+                double k = 10;
+                SetPowerDCLinks(model, 1 * k);
+                CalcModel(model);
+
+                double dFp1 = model.FrequencyCenter - 50;
+                Trace.WriteLine("+" + 1 * k +":" +   "dFp1: " + (model.FrequencyCenter) + "           ВПТ: " + model.DCLinksCenterRight[0].S);
+                SetDefaultS(model);
+
+                SetPowerDCLinks(model, -1 * k);
+                CalcModel(model);
+                //Trace.WriteLine("ВПТ: " + model.DCLinksCenterRight[0].S);
+                double dFm1 = model.FrequencyCenter - 50;
+                Trace.WriteLine("-" + 1 * k + ":" + "dFm1: " + (model.FrequencyCenter) + "           ВПТ: " + model.DCLinksCenterRight[0].S);
+                SetDefaultS(model);
+
+                double optStep = -(dFm1 - dFp1) / (2 * dFm1 - 4 * dF0 + 2 * dFp1);
+                
+
+                
+                Trace.WriteLine("СУПЕРШАГ: " + optStep + "      ДОБАВКА ВПТ: " + k * optStep);
+
+
+                SetPowerDCLinks(model, k * optStep);
+                CalcModel(model);
+                //SetDefaultS(model);
+                Trace.WriteLine("ЧАСТОТА СТАЛА: " + model.FrequencyCenter + "  ВПТ: " + model.DCLinksCenterRight[0].S);
+                SetS(model);
+                test.Text = model.FrequencyCenter.ToString();
+            }
+            
+
+
             //for (int i = 0; i < 20 & Math.Abs(50 - model.FrequencyCenter) > 0.001; i++)
             //{
             //    double dF = 50 - model.FrequencyCenter;
-            //    foreach (var link in model.DCLinksCenterLeft)
-            //        link.S += 30 * dF / 50 / acceleration;
-            //    foreach (var link in model.DCLinksCenterRight)
-            //    {
-            //        link.S += 30 * dF / 50 / acceleration;
 
-            //        //test.Text = $"count:{counter}   P:{link.S.X}   dF:{dF}   Add:{link.S.X * dF / 50 / 6}";
+            //    double kF = dF / 50;
+            //    double dS;
+            //    double ass;
+            //    //if (model.FrequencyCenter > 50)
+            //    //    ass = 50 / Math.Abs(model.FrequencyCenter);
+            //    //else
+            //    //    ass = Math.Abs(model.FrequencyCenter) / 50;
+            //    ass = 1;
+            //    if (dF < 0)
+            //    {
+            //        dS = 1 / Math.Abs(kF) * ass;
+            //        SetPowerDCLinks(model, dS);
             //    }
+            //    else
+            //    {
+            //        dS = 1 / Math.Abs(kF) * ass;
+            //        SetPowerDCLinks(model, dS);
+            //    }
+
+
             //    CalcModel(model);
             //    counter++;
-            //    Trace.WriteLine(model.FrequencyCenter);
+            //    Trace.WriteLine(model.FrequencyCenter + "  dS: " + dS + "  ВПТ: " + model.DCLinksCenterRight[0].S);
             //}
+            //test.Text = counter.ToString();
 
-            double c = 2;
-            double dF; 
-            for (int i = 0; i < 50 & Math.Abs(50 - model.FrequencyCenter) > 0.001; i++)
-            {
-                dF = 50 - model.FrequencyCenter;
-                
-                
-                if (dF < 0)
-                {
-                    foreach (var link in model.DCLinksCenterLeft)
-                        link.S -= 100 / c;
-                    foreach (var link in model.DCLinksCenterRight)
-                        link.S -= 100 / c;
-                }
-                else
-                {
-                    foreach (var link in model.DCLinksCenterLeft)
-                        link.S += 100 / c;
-                    foreach (var link in model.DCLinksCenterRight)
-                        link.S += 100 / c;
-                }
-                CalcModel(model);
-                dF = 50 - model.FrequencyCenter;
-                if (dF < 0)
-                    c /= 2;
-                else
-                    c *= 2;
-                Trace.WriteLine(model.FrequencyCenter);
-                counter++;
+            //double c = 2;
+            //double dF; 
+            //for (int i = 0; i < 50 & Math.Abs(50 - model.FrequencyCenter) > 0.001; i++)
+            //{
+            //    dF = 50 - model.FrequencyCenter;
 
-            }
-            test.Text = counter.ToString();
+
+            //    if (dF < 0)
+            //    {
+            //        foreach (var link in model.DCLinksCenterLeft)
+            //            link.S -= 100 / c;
+            //        foreach (var link in model.DCLinksCenterRight)
+            //            link.S -= 100 / c;
+            //    }
+            //    else
+            //    {
+            //        foreach (var link in model.DCLinksCenterLeft)
+            //            link.S += 100 / c;
+            //        foreach (var link in model.DCLinksCenterRight)
+            //            link.S += 100 / c;
+            //    }
+            //    CalcModel(model);
+            //    dF = 50 - model.FrequencyCenter;
+            //    if (dF < 0)
+            //        c /= 2;
+            //    else
+            //        c *= 2;
+            //    Trace.WriteLine(model.FrequencyCenter);
+            //    counter++;
+
+            //}
+            //test.Text = counter.ToString();
 
 
 
@@ -130,7 +197,7 @@ namespace Diser
         public Model InitialModel()
         {
             Model model = new Model();
-            model.Kload = 0.6;
+            model.Kload = 0.5;
 
             // Create DCLink with default parameters
             model.DCLinksCenterRight.Add(new DCLink("C6-R1", new Complex(43.9, 21.8), 6, 1));
@@ -431,11 +498,22 @@ namespace Diser
             {
                 Name = name;
                 S = s;
+                DefaultS = s;
                 Node1 = node1;
                 Node2 = node2;
             }
             public string Name { get; set; }
             public Complex S { get; set; }
+            public Complex DefaultS { get; set; }
+            public Complex ModS
+            {
+                get
+                {
+                    return new Complex(Math.Abs(S.X), Math.Abs(S.Y));
+                }
+                set { }
+            }
+
             public int Node1 { get; set; }
             public int Node2 { get; set; }
             public void SetGenerationDCLink(bool isNode1, IRastr rastr)
