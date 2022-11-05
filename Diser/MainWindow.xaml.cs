@@ -92,38 +92,58 @@ namespace Diser
             model.StartingFrequencyRight = model.FrequencyRight;
             model.StartingFrequencyLeft = model.FrequencyLeft;
             Trace.WriteLine("СТАРТ: " + (model.StartingFrequencyCenter) + "  ВПТ: " + model.DCLinksCenterRight[0].S);
-            
-            for(int i = 0; i < 2; i++)
+
+            for (int i = 0; i < 20 & Math.Abs(50 - model.FrequencyCenter) > 0.001; i++)
             {
-                double dF0 = model.FrequencyCenter - 50;
-                double k = 10;
-                SetPowerDCLinks(model, 1 * k);
+                counter++;
+                double dF0 = model.FrequencyCenter;
+                double k = 1;
+                SetPowerDCLinks(model, 1);
                 CalcModel(model);
-
-                double dFp1 = model.FrequencyCenter - 50;
-                Trace.WriteLine("+" + 1 * k +":" +   "dFp1: " + (model.FrequencyCenter) + "           ВПТ: " + model.DCLinksCenterRight[0].S);
+                double dFp1 = model.FrequencyCenter;
+                Trace.WriteLine("+" + 1 * k + ":" + "dFp1: " + (model.FrequencyCenter) + "           ВПТ: " + model.DCLinksCenterRight[0].S);
                 SetDefaultS(model);
 
-                SetPowerDCLinks(model, -1 * k);
+                // x1 - 0 y1 - F0
+                // x2 - k y2 - dF1
+
+
+                double K = (dFp1 - dF0) / (k - 0);
+
+                double B = (k * dF0 - dFp1 * 0) / (k - 0);
+
+
+                double step = (50 - B) / K;
+
+
+                Trace.WriteLine("СУПЕРШАГ: " + step + "      ДОБАВКА ВПТ: " + k * step);
+                SetPowerDCLinks(model, step);
                 CalcModel(model);
-                //Trace.WriteLine("ВПТ: " + model.DCLinksCenterRight[0].S);
-                double dFm1 = model.FrequencyCenter - 50;
-                Trace.WriteLine("-" + 1 * k + ":" + "dFm1: " + (model.FrequencyCenter) + "           ВПТ: " + model.DCLinksCenterRight[0].S);
-                SetDefaultS(model);
-
-                double optStep = -(dFm1 - dFp1) / (2 * dFm1 - 4 * dF0 + 2 * dFp1);
-                
-
-                
-                Trace.WriteLine("СУПЕРШАГ: " + optStep + "      ДОБАВКА ВПТ: " + k * optStep);
-
-
-                SetPowerDCLinks(model, k * optStep);
-                CalcModel(model);
-                //SetDefaultS(model);
                 Trace.WriteLine("ЧАСТОТА СТАЛА: " + model.FrequencyCenter + "  ВПТ: " + model.DCLinksCenterRight[0].S);
+                
+                //double dFp1 = model.FrequencyCenter - 50;
+                //Trace.WriteLine("+" + 1 * k +":" +   "dFp1: " + (model.FrequencyCenter) + "           ВПТ: " + model.DCLinksCenterRight[0].S);
+                //SetDefaultS(model);
+
+                //SetPowerDCLinks(model, -1 * k);
+                //CalcModel(model);
+                ////Trace.WriteLine("ВПТ: " + model.DCLinksCenterRight[0].S);
+                //double dFm1 = model.FrequencyCenter - 50;
+                //Trace.WriteLine("-" + 1 * k + ":" + "dFm1: " + (model.FrequencyCenter) + "           ВПТ: " + model.DCLinksCenterRight[0].S);
+                //SetDefaultS(model);
+
+                //double optStep = -(dFm1 - dFp1) / (2 * dFm1 - 4 * dF0 + 2 * dFp1);
+
+
+
+                //Trace.WriteLine("СУПЕРШАГ: " + optStep + "      ДОБАВКА ВПТ: " + k * optStep);
+
+
+                //SetPowerDCLinks(model, k * optStep);
+                //CalcModel(model);
+                ////SetDefaultS(model);
                 SetS(model);
-                test.Text = model.FrequencyCenter.ToString();
+                test.Text = counter.ToString();
             }
             
 
