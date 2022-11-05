@@ -217,7 +217,7 @@ namespace Diser
         public Model InitialModel()
         {
             Model model = new Model();
-            model.Kload = 0.5;
+            model.Kload = 1;
 
             // Create DCLink with default parameters
             model.DCLinksCenterRight.Add(new DCLink("C6-R1", new Complex(43.9, 21.8), 6, 1));
