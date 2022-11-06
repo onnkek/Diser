@@ -10,6 +10,8 @@ using System.Text;
 using System.Diagnostics;
 using ASTRALib;
 using System.Runtime.InteropServices;
+using Excel = Microsoft.Office.Interop.Excel;
+using System.IO;
 
 namespace Diser
 {
@@ -21,8 +23,11 @@ namespace Diser
         private static string pathCenter = @"C:\Users\Агро\Desktop\С винды мака 30.08.22\Дисер\Делим\Center.rg2";
         private static string pathRight = @"C:\Users\Агро\Desktop\С винды мака 30.08.22\Дисер\Делим\Right.rg2";
         private static string pathLeft = @"C:\Users\Агро\Desktop\С винды мака 30.08.22\Дисер\Делим\Left.rg2";
+        private static string pathOutput = @"C:\Users\Агро\Desktop\Универ\Дисер\Result";
 
+        private static Random _random = new Random();
         public static List<Model> models = new List<Model>();
+        private static double _kLoad;
         public MainWindow()
         {
             InitializeComponent();
@@ -33,18 +38,155 @@ namespace Diser
 
             Stopwatch stopwatch = new Stopwatch();
             stopwatch.Start();
-
-            for (int i = 0; i < 1; i++)
+            _kLoad = 0.7;
+            for (int i = 0; i < 1000; i++)
             {
                 Model model = InitialModel();
                 CalcModel(model);
                 FrequencyOptimization(model);
                 models.Add(model);
+                Trace.WriteLine($"Iteration {i} - Done!  Fs={model.StartingFrequencyCenter}   F={model.FrequencyCenter}");
             }
 
             stopwatch.Stop();
             test.Text = stopwatch.Elapsed.ToString();
 
+
+            SaveXLS(models);
+
+
+
+
+
+
+        }
+
+        public static void SaveXLS(List<Model> models)
+        {
+            Excel.Application excel = new Excel.Application();
+            Excel.Workbook book = excel.Workbooks.Add(Type.Missing);
+            Excel.Worksheet sheet = book.ActiveSheet;
+
+
+
+
+
+
+
+
+
+            sheet.Cells[1, 1].Value = "N";
+            sheet.Cells[1, 2].Value = "F_center";
+            sheet.Cells[1, 3].Value = "F_left";
+            sheet.Cells[1, 4].Value = "F_right";
+
+            sheet.Cells[1, 5].Value = "F_center_reg";
+            sheet.Cells[1, 6].Value = "F_left_reg";
+            sheet.Cells[1, 7].Value = "F_right_reg";
+
+            sheet.Cells[1, 8].Value = "P_3";
+            sheet.Cells[1, 9].Value = "Q_3";
+            sheet.Cells[1, 10].Value = "P_23";
+            sheet.Cells[1, 11].Value = "Q_23";
+
+            sheet.Cells[1, 12].Value = "P_6_L";
+            sheet.Cells[1, 13].Value = "Q_6_L";
+            sheet.Cells[1, 14].Value = "P_8_L";
+            sheet.Cells[1, 15].Value = "Q_8_L";
+            sheet.Cells[1, 16].Value = "P_9_L";
+            sheet.Cells[1, 17].Value = "Q_9_L";
+
+            sheet.Cells[1, 18].Value = "P_6_R";
+            sheet.Cells[1, 19].Value = "Q_6_R";
+            sheet.Cells[1, 20].Value = "P_8_R";
+            sheet.Cells[1, 21].Value = "Q_8_R";
+            sheet.Cells[1, 22].Value = "P_9_R";
+            sheet.Cells[1, 23].Value = "Q_9_R";
+
+            sheet.Cells[1, 24].Value = "P_C6-R1";
+            sheet.Cells[1, 25].Value = "Q_C6-R1";
+            sheet.Cells[1, 26].Value = "P_C7-R2";
+            sheet.Cells[1, 27].Value = "Q_C7-R2";
+            sheet.Cells[1, 28].Value = "P_C9-R3";
+            sheet.Cells[1, 29].Value = "Q_C9-R3";
+
+            sheet.Cells[1, 30].Value = "P_C26-L1";
+            sheet.Cells[1, 31].Value = "Q_C26-L1";
+            sheet.Cells[1, 32].Value = "P_C27-L2";
+            sheet.Cells[1, 33].Value = "Q_C27-L2";
+            sheet.Cells[1, 34].Value = "P_C29-L3";
+            sheet.Cells[1, 35].Value = "Q_C29-L3";
+
+            foreach (var model in models)
+            {
+                sheet.Cells[2 + models.IndexOf(model), 1].Value = 1 + models.IndexOf(model);
+                sheet.Cells[2 + models.IndexOf(model), 2].Value = model.StartingFrequencyCenter;
+                sheet.Cells[2 + models.IndexOf(model), 3].Value = model.StartingFrequencyLeft;
+                sheet.Cells[2 + models.IndexOf(model), 4].Value = model.StartingFrequencyRight;
+
+                sheet.Cells[2 + models.IndexOf(model), 5].Value = model.FrequencyCenter;
+                sheet.Cells[2 + models.IndexOf(model), 6].Value = model.FrequencyLeft;
+                sheet.Cells[2 + models.IndexOf(model), 7].Value = model.FrequencyRight;
+
+                sheet.Cells[2 + models.IndexOf(model), 8].Value = model.GenerationCenter[0].S.X;
+                sheet.Cells[2 + models.IndexOf(model), 9].Value = model.GenerationCenter[0].S.Y;
+                sheet.Cells[2 + models.IndexOf(model), 10].Value = model.GenerationCenter[1].S.X;
+                sheet.Cells[2 + models.IndexOf(model), 11].Value = model.GenerationCenter[1].S.Y;
+
+                sheet.Cells[2 + models.IndexOf(model), 12].Value = model.GenerationLeft[0].S.X;
+                sheet.Cells[2 + models.IndexOf(model), 13].Value = model.GenerationLeft[0].S.Y;
+                sheet.Cells[2 + models.IndexOf(model), 14].Value = model.GenerationLeft[1].S.X;
+                sheet.Cells[2 + models.IndexOf(model), 15].Value = model.GenerationLeft[1].S.Y;
+                sheet.Cells[2 + models.IndexOf(model), 16].Value = model.GenerationLeft[2].S.X;
+                sheet.Cells[2 + models.IndexOf(model), 17].Value = model.GenerationLeft[2].S.Y;
+
+                sheet.Cells[2 + models.IndexOf(model), 18].Value = model.GenerationRight[0].S.X;
+                sheet.Cells[2 + models.IndexOf(model), 19].Value = model.GenerationRight[0].S.Y;
+                sheet.Cells[2 + models.IndexOf(model), 20].Value = model.GenerationRight[1].S.X;
+                sheet.Cells[2 + models.IndexOf(model), 21].Value = model.GenerationRight[1].S.Y;
+                sheet.Cells[2 + models.IndexOf(model), 22].Value = model.GenerationRight[2].S.X;
+                sheet.Cells[2 + models.IndexOf(model), 23].Value = model.GenerationRight[2].S.Y;
+
+                sheet.Cells[2 + models.IndexOf(model), 24].Value = model.DCLinksCenterLeft[0].S.X;
+                sheet.Cells[2 + models.IndexOf(model), 25].Value = model.DCLinksCenterLeft[0].S.Y;
+                sheet.Cells[2 + models.IndexOf(model), 26].Value = model.DCLinksCenterLeft[1].S.X;
+                sheet.Cells[2 + models.IndexOf(model), 27].Value = model.DCLinksCenterLeft[1].S.Y;
+                sheet.Cells[2 + models.IndexOf(model), 28].Value = model.DCLinksCenterLeft[2].S.X;
+                sheet.Cells[2 + models.IndexOf(model), 29].Value = model.DCLinksCenterLeft[2].S.Y;
+
+
+                sheet.Cells[2 + models.IndexOf(model), 30].Value = model.DCLinksCenterRight[0].S.X;
+                sheet.Cells[2 + models.IndexOf(model), 31].Value = model.DCLinksCenterRight[0].S.Y;
+                sheet.Cells[2 + models.IndexOf(model), 32].Value = model.DCLinksCenterRight[1].S.X;
+                sheet.Cells[2 + models.IndexOf(model), 33].Value = model.DCLinksCenterRight[1].S.Y;
+                sheet.Cells[2 + models.IndexOf(model), 34].Value = model.DCLinksCenterRight[2].S.X;
+                sheet.Cells[2 + models.IndexOf(model), 35].Value = model.DCLinksCenterRight[2].S.Y;
+
+                Trace.WriteLine("Save " + models.IndexOf(model) + " - Done!");
+            }
+
+
+
+            sheet.Columns.AutoFit();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+            Directory.CreateDirectory(pathOutput);
+            pathOutput += $@"\K={_kLoad}-{DateTime.Now:dd.MM.yy-HH.mm.ss}.xlsx";
+            excel.Application.ActiveWorkbook.SaveAs(pathOutput);
+            book.Close();
         }
 
         private static Model _model;
@@ -91,7 +233,7 @@ namespace Diser
             model.StartingFrequencyCenter = model.FrequencyCenter;
             model.StartingFrequencyRight = model.FrequencyRight;
             model.StartingFrequencyLeft = model.FrequencyLeft;
-            Trace.WriteLine("СТАРТ: " + (model.StartingFrequencyCenter) + "  ВПТ: " + model.DCLinksCenterRight[0].S);
+            //Trace.WriteLine("СТАРТ: " + (model.StartingFrequencyCenter) + "  ВПТ: " + model.DCLinksCenterRight[0].S);
 
             for (int i = 0; i < 20 & Math.Abs(50 - model.FrequencyCenter) > 0.001; i++)
             {
@@ -101,7 +243,7 @@ namespace Diser
                 SetPowerDCLinks(model, 1);
                 CalcModel(model);
                 double dFp1 = model.FrequencyCenter;
-                Trace.WriteLine("+" + 1 * k + ":" + "dFp1: " + (model.FrequencyCenter) + "           ВПТ: " + model.DCLinksCenterRight[0].S);
+                //Trace.WriteLine("+" + 1 * k + ":" + "dFp1: " + (model.FrequencyCenter) + "           ВПТ: " + model.DCLinksCenterRight[0].S);
                 SetDefaultS(model);
 
                 // x1 - 0 y1 - F0
@@ -116,11 +258,11 @@ namespace Diser
                 double step = (50 - B) / K;
 
 
-                Trace.WriteLine("СУПЕРШАГ: " + step + "      ДОБАВКА ВПТ: " + k * step);
+                //Trace.WriteLine("СУПЕРШАГ: " + step + "      ДОБАВКА ВПТ: " + k * step);
                 SetPowerDCLinks(model, step);
                 CalcModel(model);
-                Trace.WriteLine("ЧАСТОТА СТАЛА: " + model.FrequencyCenter + "  ВПТ: " + model.DCLinksCenterRight[0].S);
-                
+                //Trace.WriteLine("ЧАСТОТА СТАЛА: " + model.FrequencyCenter + "  ВПТ: " + model.DCLinksCenterRight[0].S);
+
                 //double dFp1 = model.FrequencyCenter - 50;
                 //Trace.WriteLine("+" + 1 * k +":" +   "dFp1: " + (model.FrequencyCenter) + "           ВПТ: " + model.DCLinksCenterRight[0].S);
                 //SetDefaultS(model);
@@ -145,7 +287,7 @@ namespace Diser
                 SetS(model);
                 test.Text = counter.ToString();
             }
-            
+
 
 
             //for (int i = 0; i < 20 & Math.Abs(50 - model.FrequencyCenter) > 0.001; i++)
@@ -217,7 +359,7 @@ namespace Diser
         public Model InitialModel()
         {
             Model model = new Model();
-            model.Kload = 1;
+            model.Kload = _kLoad;
 
             // Create DCLink with default parameters
             model.DCLinksCenterRight.Add(new DCLink("C6-R1", new Complex(43.9, 21.8), 6, 1));
@@ -332,10 +474,10 @@ namespace Diser
             //openModel.Foreground = new SolidColorBrush(Colors.Green);
         }
 
-
+        private static IRastr _rastr = new Rastr();
         public void LoadModel(Model model, string path)
         {
-            model.Rastr = new Rastr();
+            //model.Rastr = _rastr;
             model.Rastr.Load(RG_KOD.RG_REPL, path, "");
         }
 
@@ -394,6 +536,7 @@ namespace Diser
         {
             public Model()
             {
+                
                 DCLinksCenterRight = new List<DCLink>();
                 DCLinksCenterLeft = new List<DCLink>();
                 GenerationCenter = new List<Generation>();
@@ -402,11 +545,12 @@ namespace Diser
                 LoadCenter = new LoadCollection();
                 LoadRight = new LoadCollection();
                 LoadLeft = new LoadCollection();
+                Rastr = _rastr;
             }
             public static string pathCenter = @"C:\Users\Агро\Desktop\С винды мака 30.08.22\Дисер\Делим\Center.rg2";
             public static string pathRight = @"C:\Users\Агро\Desktop\С винды мака 30.08.22\Дисер\Делим\Right.rg2";
             public static string pathLeft = @"C:\Users\Агро\Desktop\С винды мака 30.08.22\Дисер\Делим\Left.rg2";
-            public IRastr Rastr { get; set; }
+            public IRastr Rastr { get; set; } 
             public double FrequencyCenter { get; set; }
             public double FrequencyRight { get; set; }
             public double FrequencyLeft { get; set; }
@@ -593,12 +737,11 @@ namespace Diser
         }
         public static double NextGaussian(double μ, double σ)
         {
-            Random random = new Random();
             double u, v, s;
             do
             {
-                u = 2 * random.NextDouble() - 1;
-                v = 2 * random.NextDouble() - 1;
+                u = 2 * _random.NextDouble() - 1;
+                v = 2 * _random.NextDouble() - 1;
                 s = u * u + v * v;
             }
             while (u <= -1 || v <= -1 || s >= 1 || s == 0);
