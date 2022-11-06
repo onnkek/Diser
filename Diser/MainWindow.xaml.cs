@@ -27,7 +27,7 @@ namespace Diser
 
         private static Random _random = new Random();
         public static List<Model> models = new List<Model>();
-        private static double _kLoad;
+        private static double _kLoad = 0.7;
         public MainWindow()
         {
             InitializeComponent();
@@ -38,7 +38,6 @@ namespace Diser
 
             Stopwatch stopwatch = new Stopwatch();
             stopwatch.Start();
-            _kLoad = 0.7;
             for (int i = 0; i < 1000; i++)
             {
                 Model model = InitialModel();
@@ -737,20 +736,22 @@ namespace Diser
         }
         public static double NextGaussian(double μ, double σ)
         {
-            double u, v, s;
-            do
+            double result = -1;
+
+            while (result < 0)
             {
-                u = 2 * _random.NextDouble() - 1;
-                v = 2 * _random.NextDouble() - 1;
-                s = u * u + v * v;
+                double u, v, s;
+                do
+                {
+                    u = 2 * _random.NextDouble() - 1;
+                    v = 2 * _random.NextDouble() - 1;
+                    s = u * u + v * v;
+                }
+                while (u <= -1 || v <= -1 || s >= 1 || s == 0);
+                double r = Math.Sqrt(-2 * Math.Log(s) / s);
+                result = μ + σ * r * u;
             }
-            while (u <= -1 || v <= -1 || s >= 1 || s == 0);
-            double r = Math.Sqrt(-2 * Math.Log(s) / s);
-            double result = μ + σ * r * u;
-            if (result >= 0)
-                return μ + σ * r * u;
-            else
-                return 0;
+            return result;
         }
     }
 }
