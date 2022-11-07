@@ -38,20 +38,27 @@ namespace Diser
 
             Stopwatch stopwatch = new Stopwatch();
             stopwatch.Start();
-            for (int i = 0; i < 1000; i++)
-            {
-                Model model = InitialModel();
-                CalcModel(model);
-                FrequencyOptimization(model);
-                models.Add(model);
-                Trace.WriteLine($"Iteration {i} - Done!  Fs={model.StartingFrequencyCenter}   F={model.FrequencyCenter}");
-            }
 
+            for (int j = 5; j < 13; j++)
+            {
+                models.Clear();
+                _kLoad = 0.1 * j;
+                for (int i = 0; i < 5000; i++)
+                {
+                    Model model = InitialModel();
+                    CalcModel(model);
+                    FrequencyOptimization(model);
+                    models.Add(model);
+                    Trace.WriteLine($"Iteration {i} - Done!  Fs={model.StartingFrequencyCenter}   F={model.FrequencyCenter}");
+                }
+                SaveXLS(models);
+            }    
+                
             stopwatch.Stop();
             test.Text = stopwatch.Elapsed.ToString();
 
 
-            SaveXLS(models);
+            
 
 
 
@@ -180,11 +187,9 @@ namespace Diser
 
 
 
-
-
             Directory.CreateDirectory(pathOutput);
-            pathOutput += $@"\K={_kLoad}-{DateTime.Now:dd.MM.yy-HH.mm.ss}.xlsx";
-            excel.Application.ActiveWorkbook.SaveAs(pathOutput);
+            var path = pathOutput + $@"\K={_kLoad}-{DateTime.Now:dd.MM.yy-HH.mm.ss}.xlsx";
+            excel.Application.ActiveWorkbook.SaveAs(path);
             book.Close();
         }
 
@@ -234,7 +239,7 @@ namespace Diser
             model.StartingFrequencyLeft = model.FrequencyLeft;
             //Trace.WriteLine("СТАРТ: " + (model.StartingFrequencyCenter) + "  ВПТ: " + model.DCLinksCenterRight[0].S);
 
-            for (int i = 0; i < 20 & Math.Abs(50 - model.FrequencyCenter) > 0.001; i++)
+            for (int i = 0; i < 20 & Math.Abs(50 - model.FrequencyCenter) > 0.01; i++)
             {
                 counter++;
                 double dF0 = model.FrequencyCenter;
