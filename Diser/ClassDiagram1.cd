@@ -1,0 +1,75 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1" MembersFormat="NameAndType">
+  <Class Name="Diser.Complex">
+    <Position X="7.25" Y="5.5" Width="2" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAEYAUAAAAAAAAAAAAAAAAAAAAAYAA=</HashCode>
+      <FileName>Complex.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Diser.DCLink">
+    <Position X="11.75" Y="8.5" Width="2.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAABAAAAAACAgAQRAAAAAAAAAAAAAAACAACA=</HashCode>
+      <FileName>DCLink.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Diser.Generation">
+    <Position X="7.25" Y="8.25" Width="2.25" />
+    <TypeIdentifier>
+      <HashCode>QAAAAAAAAAAAAAAAAIAAAAQAAAAAAQCAAAAAABGABAA=</HashCode>
+      <FileName>Generation.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Diser.Load">
+    <Position X="7.25" Y="11.5" Width="2.25" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAGAAAA=</HashCode>
+      <FileName>Load.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Diser.LoadCollection">
+    <Position X="11.75" Y="11.5" Width="2.5" />
+    <TypeIdentifier>
+      <HashCode>AQAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAABAAAAAAAA=</HashCode>
+      <FileName>LoadCollection.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Diser.Model">
+    <Position X="11.75" Y="2.75" Width="2.75" />
+    <TypeIdentifier>
+      <HashCode>AAAAAIaEARAIAEBIAAAAoABAAYlABAAAAAAAABAAAAA=</HashCode>
+      <FileName>Model.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Diser.MainWindow" BaseTypeListCollapsed="true">
+    <Position X="7.25" Y="2.75" Width="2" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAQARAAAAAAAAAAEAAAAAAAAAgQAAAAAAAAA=</HashCode>
+      <FileName>MainWindow.xaml.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Class Name="Diser.Worker">
+    <Position X="9.5" Y="2.75" Width="2" />
+    <TypeIdentifier>
+      <HashCode>CQABABAAAAAAAAAQAEAAAAAAEQAABQAAAAgAAMkIAgE=</HashCode>
+      <FileName>Worker.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Diser.SolarGeneration">
+    <Position X="9.75" Y="8.25" Width="1.75" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAA=</HashCode>
+      <FileName>SolarGeneration.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Diser.WindGeneration">
+    <Position X="9.75" Y="9.75" Width="1.75" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAAAEAAgAAEAAA=</HashCode>
+      <FileName>WindGeneration.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Font Name="Segoe UI" Size="9" />
+</ClassDiagram>
